@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Recherche par Emprunteur</h1>
+    <p class="text-muted">Tapez le nom d'un client pour voir l'historique de ses prêts.</p>
+
+    <div class="mb-4">
+        <input type="text" id="borrower-search" class="form-control form-control-lg" 
+               placeholder="Ex: Jean Dupont, Marie..." autocomplete="off">
+    </div>
+
+    <table class="table table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Date Début</th>
+                <th>Date Fin</th>
+                <th>Client</th>
+                <th>Vidéo (Film)</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+            <tr>
+                <td colspan="4" class="text-center">Commencez à taper pour rechercher...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const searchInput = document.getElementById('borrower-search');
+    const resultsBody = document.getElementById('results-body');
+
+    searchInput.addEventListener('input', async (e) => {
+        const query = e.target.value;
+
+        if (query.length < 2) {
+            resultsBody.innerHTML = '<tr><td colspan="4" class="text-center">Tapez au moins 2 caractères...</td></tr>';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/borrower/loans?q=${encodeURIComponent(query)}`);
+            const loans = await response.json();
+
+            if (loans.length === 0) {
+                resultsBody.innerHTML = '<tr><td colspan="4" class="text-center">Aucun emprunt trouvé pour ce client.</td></tr>';
+                return;
+            }
+
+            resultsBody.innerHTML = loans.map(loan => `
+                <tr>
+                    <td>${new Date(loan.startDate).toLocaleDateString()}</td>
+                    <td>${loan.endDate ? new Date(loan.endDate).toLocaleDateString() : '<span class="badge bg-warning text-dark">En cours</span>'}</td>
+                    <td><strong>${loan.borrower.name}</strong></td>
+                    <td>${loan.video.title}</td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Erreur:', error);
+        }
+    });
+</script>
+{% endblock %}

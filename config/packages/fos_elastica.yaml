@@ -1,0 +1,35 @@
+fos_elastica:
+    clients:
+        default:
+            hosts:
+                - "elasticsearch:9200"
+    indexes:
+        app:
+            persistence:
+                driver: orm
+                model: App\Entity\Loan
+                provider: ~
+                listener: ~ 
+            properties:
+                startDate: { type: date }
+                endDate: { type: date }
+                # On indexe les infos du client liées au prêt
+                borrower:
+                    type: object
+                    properties:
+                        name: 
+                            type: text           # CHANGÉ : Permet la recherche partielle (ex: "Jea")
+                            analyzer: french     # Ignore les majuscules/accents
+                            fields:
+                                keyword:         # Garde une version exacte pour le tri/stats
+                                    type: keyword
+                # On indexe les infos de la vidéo liée au prêt
+                video:
+                    type: object
+                    properties:
+                        title: 
+                            type: text
+                            analyzer: french
+                            fields:
+                                keyword:
+                                    type: keyword
