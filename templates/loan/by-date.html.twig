@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Recherche par Période</h1>
+    <p class="text-muted">Sélectionnez une plage de dates pour voir tous les emprunts de cette période.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="start-date" class="form-label">Date de début</label>
+                <input type="date" id="start-date" class="form-control form-control-lg">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="end-date" class="form-label">Date de fin (optionnelle)</label>
+                <input type="date" id="end-date" class="form-control form-control-lg">
+            </div>
+        </div>
+    </div>
+
+    <button id="search-btn" class="btn btn-primary btn-lg mb-4">
+        <i class="fas fa-search"></i> Rechercher
+    </button>
+
+    <table class="table table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Date Début</th>
+                <th>Date Fin</th>
+                <th>Client</th>
+                <th>Vidéo (Film)</th>
+            </tr>
+        </thead>
+        <tbody id="results-body">
+            <tr>
+                <td colspan="4" class="text-center text-muted">Sélectionnez une date pour effectuer une recherche...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const searchBtn = document.getElementById('search-btn');
+    const resultsBody = document.getElementById('results-body');
+
+    searchBtn.addEventListener('click', async () => {
+        const startDate = startDateInput.value;
+
+        if (!startDate) {
+            alert('Veuillez sélectionner une date de début');
+            return;
+        }
+
+        const endDate = endDateInput.value || '';
+        const params = new URLSearchParams();
+        params.append('start_date', startDate);
+        if (endDate) {
+            params.append('end_date', endDate);
+        }
+
+        try {
+            const response = await fetch(`/api/loans/by-date?${params.toString()}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                resultsBody.innerHTML = `<tr><td colspan="4" class="text-center text-danger">${data.error}</td></tr>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                resultsBody.innerHTML = '<tr><td colspan="4" class="text-center">Aucun emprunt trouvé pour cette période.</td></tr>';
+                return;
+            }
+
+            resultsBody.innerHTML = data.map(loan => `
+                <tr>
+                    <td>${new Date(loan.startDate).toLocaleDateString()}</td>
+                    <td>${loan.endDate ? new Date(loan.endDate).toLocaleDateString() : '<span class="badge bg-warning text-dark">En cours</span>'}</td>
+                    <td><strong>${loan.borrower.name}</strong></td>
+                    <td>${loan.video.title}</td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            resultsBody.innerHTML = '<tr><td colspan="4" class="text-center text-danger">Erreur lors de la recherche</td></tr>';
+        }
+    });
+
+    // Permettre la recherche en appuyant sur Entrée
+    endDateInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchBtn.click();
+        }
+    });
+</script>
+{% endblock %}

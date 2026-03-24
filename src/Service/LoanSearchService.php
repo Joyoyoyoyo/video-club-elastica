@@ -65,4 +65,35 @@ class LoanSearchService
             return $hit->getSource();
         }, $resultSet->getResults());
     }
+
+    public function findLoansByDateRange(\DateTime $startDate, ?\DateTime $endDate = null): array
+    {
+        $index = $this->indexManager->getIndex('app');
+
+        $query = new Query();
+        
+        // Recherche par plage de dates
+        $rangeQuery = new Query\Range();
+        
+        if ($endDate) {
+            $rangeQuery->addField('startDate', [
+                'gte' => $startDate->format('Y-m-d'),
+                'lte' => $endDate->format('Y-m-d')
+            ]);
+        } else {
+            $rangeQuery->addField('startDate', [
+                'gte' => $startDate->format('Y-m-d')
+            ]);
+        }
+        
+        $query->setQuery($rangeQuery);
+        $query->setSort(['startDate' => ['order' => 'desc']]);
+        $query->setSize(100);
+
+        $resultSet = $index->search($query);
+        
+        return array_map(function($hit) {
+            return $hit->getSource();
+        }, $resultSet->getResults());
+    }
 }
