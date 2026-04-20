@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Top {{ limit }} des Emprunteurs les Plus Actifs</h1>
+    <p class="text-muted">Classement des emprunteurs avec le plus grand nombre d'emprunts.</p>
+
+    <table class="table table-striped mt-4">
+        <thead class="table-dark">
+            <tr>
+                <th>Rang</th>
+                <th>Emprunteur</th>
+                <th>Nombre d'Emprunts</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for borrower in topBorrowers %}
+            <tr>
+                <td>{{ loop.index }}</td>
+                <td>{{ borrower.borrower }}</td>
+                <td>{{ borrower.count }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="3" class="text-center text-muted">Aucun emprunt trouvé.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

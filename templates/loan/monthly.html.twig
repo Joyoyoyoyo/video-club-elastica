@@ -1,0 +1,109 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques d'emprunts par mois{% endblock %}
+
+{% block body %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <h1 class="mb-4">📊 Emprunts - Statistiques par mois (12 derniers mois)</h1>
+            
+            <div id="loading" class="alert alert-info">
+                ⏳ Chargement des données...
+            </div>
+            
+            <div id="stats-container" style="display: none;">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Mois</th>
+                            <th class="text-center">Nombre d'emprunts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stats-body">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="error-container" class="alert alert-danger" style="display: none;">
+                ⚠️ <strong>Erreur:</strong> <span id="error-message"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        fetchMonthlyStats();
+    });
+
+    function fetchMonthlyStats() {
+        fetch('/api/loans/monthly')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Erreur lors de la récupération des données');
+                }
+                
+                return response.json();
+            })
+            .then(data => {
+                displayStats(data);
+            })
+            .catch(error => {
+                showError(error.message);
+            });
+    }
+
+    function displayStats(data) {
+        const tbody = document.getElementById('stats-body');
+        const loadingDiv = document.getElementById('loading');
+        const statsContainer = document.getElementById('stats-container');
+        
+        tbody.innerHTML = '';
+        
+        // Afficher un message si aucune donnée
+        if (Object.keys(data).length === 0) {
+            tbody.innerHTML = '<tr><td colspan="2" class="text-center">Aucun emprunt trouvé</td></tr>';
+            loadingDiv.style.display = 'none';
+            statsContainer.style.display = 'block';
+            return;
+        }
+        
+        // Remplir le tableau avec les données
+        for (const [month, count] of Object.entries(data)) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><strong>${month}</strong></td>
+                <td class="text-center">
+                    <span class="badge bg-primary">${count}</span>
+                </td>
+            `;
+            tbody.appendChild(row);
+        }
+        
+        loadingDiv.style.display = 'none';
+        statsContainer.style.display = 'block';
+    }
+
+    function showError(message) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error-container').style.display = 'block';
+        document.getElementById('error-message').textContent = message;
+    }
+</script>
+
+<style>
+    .badge {
+        font-size: 1rem;
+        padding: 0.5rem 1rem;
+    }
+    
+    #stats-container {
+        margin-top: 2rem;
+    }
+    
+    table tbody tr:hover {
+        background-color: #f5f5f5;
+    }
+</style>
+{% endblock %}

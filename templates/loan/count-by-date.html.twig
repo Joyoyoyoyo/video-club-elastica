@@ -1,0 +1,83 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="container mt-5">
+    <h1>Nombre d'Emprunts par Période</h1>
+    <p class="text-muted">Sélectionnez une plage de dates pour voir le nombre total d'emprunts de cette période.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="start-date" class="form-label">Date de début</label>
+                <input type="date" id="start-date" class="form-control form-control-lg">
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label for="end-date" class="form-label">Date de fin (optionnelle)</label>
+                <input type="date" id="end-date" class="form-control form-control-lg">
+            </div>
+        </div>
+    </div>
+
+    <button id="search-btn" class="btn btn-primary btn-lg mb-4">
+        <i class="fas fa-search"></i> Calculer
+    </button>
+
+    <div id="result" class="alert alert-info mt-4" style="display: none;">
+        <h4>Résultat</h4>
+        <p id="count-text"></p>
+    </div>
+</div>
+
+<script>
+    const startDateInput = document.getElementById('start-date');
+    const endDateInput = document.getElementById('end-date');
+    const searchBtn = document.getElementById('search-btn');
+    const resultDiv = document.getElementById('result');
+    const countText = document.getElementById('count-text');
+
+    searchBtn.addEventListener('click', async () => {
+        const startDate = startDateInput.value;
+
+        if (!startDate) {
+            alert('Veuillez sélectionner une date de début');
+            return;
+        }
+
+        const endDate = endDateInput.value || '';
+        const params = new URLSearchParams();
+        params.append('start_date', startDate);
+        if (endDate) {
+            params.append('end_date', endDate);
+        }
+
+        try {
+            const response = await fetch(`/api/loans/count-by-date?${params.toString()}`);
+            const data = await response.json();
+
+            if (!response.ok) {
+                countText.textContent = `Erreur: ${data.error}`;
+                resultDiv.className = 'alert alert-danger mt-4';
+            } else {
+                countText.textContent = `Nombre total d'emprunts: ${data.count}`;
+                resultDiv.className = 'alert alert-success mt-4';
+            }
+            resultDiv.style.display = 'block';
+
+        } catch (error) {
+            console.error('Erreur:', error);
+            countText.textContent = 'Erreur lors du calcul';
+            resultDiv.className = 'alert alert-danger mt-4';
+            resultDiv.style.display = 'block';
+        }
+    });
+
+    // Permettre le calcul en appuyant sur Entrée
+    endDateInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchBtn.click();
+        }
+    });
+</script>
+{% endblock %}

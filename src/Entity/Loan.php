@@ -5,7 +5,18 @@ namespace App\Entity;
 use App\Repository\LoanRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use App\State\LoanElasticProvider;
 
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            provider: LoanElasticProvider::class
+        ),
+    ]
+)]
 #[ORM\Entity(repositoryClass: LoanRepository::class)]
 class Loan
 {
@@ -31,6 +42,13 @@ class Loan
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function setId(?int $id): ?self
+    {
+        $this->id = $id;
+
+        return $this;
     }
 
     public function getBorrower(): ?User

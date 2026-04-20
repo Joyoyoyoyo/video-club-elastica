@@ -20,6 +20,11 @@
         </div>
     </div>
 
+    <div class="mb-3 form-check">
+        <input type="checkbox" id="current-checkbox" class="form-check-input">
+        <label for="current-checkbox" class="form-check-label">Que les emprunts en cours</label>
+    </div>
+
     <button id="search-btn" class="btn btn-primary btn-lg mb-4">
         <i class="fas fa-search"></i> Rechercher
     </button>
@@ -44,6 +49,7 @@
 <script>
     const startDateInput = document.getElementById('start-date');
     const endDateInput = document.getElementById('end-date');
+    const currentCheckbox = document.getElementById('current-checkbox');
     const searchBtn = document.getElementById('search-btn');
     const resultsBody = document.getElementById('results-body');
 
@@ -61,6 +67,7 @@
         if (endDate) {
             params.append('end_date', endDate);
         }
+        params.append('current', currentCheckbox.checked ? 'true' : 'false');
 
         try {
             const response = await fetch(`/api/loans/by-date?${params.toString()}`);
